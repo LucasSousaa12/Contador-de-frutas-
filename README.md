@@ -100,8 +100,8 @@ Imagem 1001 → pipeline → resultado 1001
 | Imagens processadas | 1.001       |
 | Total de maçãs      | 996         |
 | Média por imagem    | 1.0         |
-| Tempo total         | 44.097s     |
-| Velocidade          | 22.7 imgs/s |
+| Tempo total         | 33.252s    |
+| Velocidade          |30.1 imgs/s |
 | Erros               | 0           |
 | Taxa de sucesso     | 100%        |
 
