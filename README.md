@@ -53,7 +53,32 @@ As imagens utilizadas no projeto foram obtidas a partir de datasets públicos di
 ---
 
 ## 📊 Métricas Avaliadas
-- Tempo de execução sequencial
+- Tempo de execução sequencial:
+ CONTAGEM DE MAÇÃS — Processamento Serial (OpenCV)
+==========================================================
+  Dataset  : data/apples
+  Saída    : output
+==========================================================
+
+✔ Dataset carregado: 41 imagens em 'data/apples'
+
+Processando 41 imagens...
+
+  [█████░░░░░░░░░░░░░░░░░░░░░░░░░]  19.5%  dataset1_front_1351.png           2 maçãslibpng error: Read Error
+  [██████████████████████████████] 100.0%  dataset4_front_900.png            3 maçãs
+
+Gerando relatórios...
+✔ Relatório CSV salvo em 'output/results.csv'
+✔ Gráfico de resumo salvo em 'output/summary.png'
+
+──────────────────────────────────────────────────────────
+  Imagens processadas : 41
+  Total de maçãs      : 51
+  Média por imagem    : 1.2
+  Tempo total         : 1.947s
+  Velocidade          : 21.1 imgs/s
+  Erros               : 1
+  
 - Tempo de execução paralelo
 - Speedup
 - Eficiência
