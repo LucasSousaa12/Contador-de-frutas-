@@ -73,10 +73,15 @@ Gerando relatórios...
 
 ──────────────────────────────────────────────────────────
   Imagens processadas : 41
+  
   Total de maçãs      : 51
+  
   Média por imagem    : 1.2
+  
   Tempo total         : 1.947s
+  
   Velocidade          : 21.1 imgs/s
+  
   Erros               : 1
   
 - Tempo de execução paralelo
