@@ -8,7 +8,7 @@ Análise serial da contagem de maçãs em imagens de pomares usando visão compu
 
 Este projeto tem como objetivo processar um dataset de imagens reais de pomares e **contar automaticamente quantas maçãs aparecem em cada foto**, utilizando técnicas de visão computacional clássica com OpenCV.
 
-O problema consiste em identificar e contar maçãs em 1.001 imagens de alta resolução do dataset **MinneApple**, processando cada imagem de forma **serial** (uma por vez). O algoritmo segue o pipeline:
+O problema consiste em identificar e contar maçãs em 15.388 imagens do dataset **MinneApple**, processando cada imagem de forma **serial** (uma por vez). O algoritmo segue o pipeline:
 
 ```
 Imagem → Suavização → Conversão HSV → Segmentação por cor → Morfologia → Contornos → Filtro → Contagem
@@ -24,7 +24,7 @@ Este trabalho foi desenvolvido como projeto prático da disciplina de **Programa
 |-----------------------|----------------------------------------------|
 | Nome                  | MinneApple                                   |
 | Fonte                 | Universidade de Minnesota (UMN DRUM)         |
-| Total de imagens      | 1.001                                        |
+| Total de imagens      | 15.388                                       |
 | Total de anotações    | 41.000+ instâncias de maçãs                  |
 | Maçãs por imagem      | 1 a 120                                      |
 | Tamanho               | 2,68 GB                                      |
@@ -37,11 +37,14 @@ Este trabalho foi desenvolvido como projeto prático da disciplina de **Programa
 
 ### Pastas utilizadas
 
-| Pasta                          | Imagens | Descrição                        |
-|--------------------------------|---------|----------------------------------|
-| `detection/train/images/`      | 670     | Fotos completas de pomar         |
-| `detection/test/images/`       | 331     | Fotos completas de pomar         |
-| **Total**                      | **1.001** | Imagens em alta resolução      |
+| Pasta                          | Imagens | Descrição                          |
+|--------------------------------|---------|------------------------------------|
+| `detection/train/images/`      | 670     | Fotos completas de pomar           |
+| `detection/test/images/`       | 331     | Fotos completas de pomar           |
+| `counting/test/images/`        | 991     | Recortes de partes das árvores     |
+| `counting/val/images/`         | 3.395   | Recortes de partes das árvores     |
+| `counting/train/images/`       | 7.000   | Recortes de partes das árvores     |
+| **Total**                      | **15.388** | —                               |
 
 ---
 
@@ -61,14 +64,14 @@ O processamento segue os seguintes passos:
 
 ### Serial
 
-As 1.001 imagens são processadas **uma de cada vez**, de forma sequencial. Cada imagem passa pelo pipeline completo antes de iniciar a próxima.
+As 15.388 imagens são processadas **uma de cada vez**, de forma sequencial. Cada imagem passa pelo pipeline completo antes de iniciar a próxima.
 
 ```
-Imagem 1 → pipeline → resultado 1
-Imagem 2 → pipeline → resultado 2
-Imagem 3 → pipeline → resultado 3
+Imagem 1     → pipeline → resultado 1
+Imagem 2     → pipeline → resultado 2
+Imagem 3     → pipeline → resultado 3
 ...
-Imagem 1001 → pipeline → resultado 1001
+Imagem 15388 → pipeline → resultado 15388
 ```
 
 ---
@@ -93,33 +96,34 @@ Imagem 1001 → pipeline → resultado 1001
 
 ## 📊 Resultados
 
-### Execução com 1.001 imagens (dataset completo)
+### Execução com 15.388 imagens (dataset completo)
 
-| Métrica             | Valor       |
-|---------------------|-------------|
-| Imagens processadas | 1.001       |
-| Total de maçãs      | 996         |
-| Média por imagem    | 1.0         |
-| Tempo total         | 33.252s    |
-| Velocidade          |30.1 imgs/s |
-| Erros               | 0           |
-| Taxa de sucesso     | 100%        |
+| Métrica             | Valor        |
+|---------------------|--------------|
+| Imagens processadas | 15.388       |
+| Total de maçãs      | 2.928        |
+| Média por imagem    | 0.2          |
+| Tempo total         | 150.823s     |
+| Velocidade          | 102.0 imgs/s |
+| Erros               | 0            |
+| Taxa de sucesso     | 100%         |
 
 ### Distribuição de maçãs por imagem
 
 | Maçãs por imagem | Qtd. de imagens | % do total |
 |------------------|-----------------|------------|
-| 0 maçãs          | ~5              | ~0.5%      |
-| 1 maçã           | maioria         | ~70%       |
-| 2 maçãs          | —               | ~20%       |
-| 3+ maçãs         | —               | ~9.5%      |
+| 0 maçãs          | ~12.460         | ~81%       |
+| 1 maçã           | ~2.000          | ~13%       |
+| 2 maçãs          | ~600            | ~4%        |
+| 3+ maçãs         | ~328            | ~2%        |
 
 ### Arquivos gerados
 
-| Arquivo             | Conteúdo                                   |
-|---------------------|--------------------------------------------|
+| Arquivo               | Conteúdo                                                    |
+|-----------------------|-------------------------------------------------------------|
 | `output/results.csv`  | Nome do arquivo e quantidade de maçãs detectadas por imagem |
-| `output/summary.png`  | Histograma de distribuição + tabela de estatísticas |
+| `output/summary.png`  | Histograma de distribuição + tabela de estatísticas         |
+| `output/grafico_serial.png` | Gráfico de evolução da detecção por imagem            |
 
 ---
 
@@ -127,11 +131,11 @@ Imagem 1001 → pipeline → resultado 1001
 
 A próxima etapa do projeto é implementar a versão **paralela** com `multiprocessing`, onde várias imagens são processadas simultaneamente para reduzir o tempo total.
 
-| Métrica    | Descrição                                         |
-|------------|---------------------------------------------------|
-| Speedup    | Tempo serial ÷ Tempo paralelo                     |
-| Eficiência | Speedup ÷ Número de workers                       |
-| Lei de Amdahl | Limite teórico do ganho com base na fração paralelizável |
+| Métrica         | Descrição                                                    |
+|-----------------|--------------------------------------------------------------|
+| Speedup         | Tempo serial ÷ Tempo paralelo                                |
+| Eficiência      | Speedup ÷ Número de workers                                  |
+| Lei de Amdahl   | Limite teórico do ganho com base na fração paralelizável     |
 
 ---
 
@@ -158,11 +162,13 @@ contagem-macas-opencv/
 ├── output/
 │   ├── results.csv               # Contagem por imagem
 │   ├── summary.png               # Gráfico de distribuição
+│   ├── grafico_serial.png        # Gráfico de evolução serial
 │   └── annotated/                # Imagens anotadas (--save-images)
 │
 ├── detector.py                   # Algoritmo de detecção com OpenCV
 ├── processor.py                  # Processamento serial
 ├── utils.py                      # Dataset, relatórios e gráficos
+├── grafico_serial.py             # Gerador do gráfico serial
 ├── main.py                       # Ponto de entrada (CLI)
 ├── requirements.txt              # Dependências Python
 └── README.md
@@ -175,8 +181,8 @@ contagem-macas-opencv/
 ### 1. Clonar o repositório
 
 ```bash
-git clone https://github.com/seu-usuario/contagem-macas-opencv.git
-cd contagem-macas-opencv
+git clone https://github.com/LucasSousaa12/Contador-de-frutas-.git
+cd Contador-de-frutas-
 ```
 
 ### 2. Instalar as dependências
@@ -188,7 +194,12 @@ pip install -r requirements.txt
 ### 3. Baixar o dataset
 
 Acesse https://datasetninja.com/minne-apple, baixe e extraia.  
-Copie as imagens das pastas `detection/train/images/` e `detection/test/images/` para `data/apples/`.
+Copie as imagens das pastas abaixo para `data/apples/`:
+- `detection/train/images/`
+- `detection/test/images/`
+- `counting/test/images/`
+- `counting/val/images/`
+- `counting/train/images/` (7.000 imagens)
 
 ### 4. Executar
 
@@ -201,6 +212,9 @@ python main.py --dataset data/apples --limit 10
 
 # Salvar imagens anotadas
 python main.py --dataset data/apples --save-images
+
+# Gerar gráfico serial
+python grafico_serial.py
 ```
 
 ---
@@ -210,7 +224,3 @@ python main.py --dataset data/apples --save-images
 > Häni, N., Roy, P., & Isler, V. (2020). **MinneApple: A Benchmark Dataset for Apple Detection and Segmentation**.  
 > *IEEE Robotics and Automation Letters*, 5(2), 852–858.  
 > https://doi.org/10.1109/LRA.2020.2965061
-
-
-│── README.md
-│── requirements.txt
