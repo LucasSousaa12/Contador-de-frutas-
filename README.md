@@ -1,6 +1,6 @@
 # 🍎 contagem-macas-opencv
 
-Análise serial da contagem de maçãs em imagens de pomares usando visão computacional clássica com OpenCV e Python.
+Análise serial e paralela da contagem de maçãs em imagens de pomares usando visão computacional clássica com OpenCV e Python, com medição de speedup e eficiência usando multiprocessamento.
 
 ---
 
@@ -8,7 +8,9 @@ Análise serial da contagem de maçãs em imagens de pomares usando visão compu
 
 Este projeto tem como objetivo processar um dataset de imagens reais de pomares e **contar automaticamente quantas maçãs aparecem em cada foto**, utilizando técnicas de visão computacional clássica com OpenCV.
 
-O problema consiste em identificar e contar maçãs em 15.388 imagens do dataset **MinneApple**, processando cada imagem de forma **serial** (uma por vez). O algoritmo segue o pipeline:
+O problema consiste em identificar e contar maçãs em 15.388 imagens do dataset **MinneApple**, comparando o desempenho de uma solução **serial** e uma solução **paralela** com diferentes configurações de workers.
+
+O algoritmo segue o pipeline:
 
 ```
 Imagem → Suavização → Conversão HSV → Segmentação por cor → Morfologia → Contornos → Filtro → Contagem
@@ -20,31 +22,30 @@ Este trabalho foi desenvolvido como projeto prático da disciplina de **Programa
 
 ## 🗃️ Base de Dados
 
-| Atributo              | Valor                                        |
-|-----------------------|----------------------------------------------|
-| Nome                  | MinneApple                                   |
-| Fonte                 | Universidade de Minnesota (UMN DRUM)         |
-| Total de imagens      | 15.388                                       |
-| Total de anotações    | 41.000+ instâncias de maçãs                  |
-| Maçãs por imagem      | 1 a 120                                      |
-| Tamanho               | 2,68 GB                                      |
-| Período               | Imagens coletadas em pomares reais           |
-| Licença               | CC BY (uso livre)                            |
-| Origem                | Häni, Roy & Isler — IEEE RA-L, 2020          |
+| Atributo              | Valor                                     |
+|-----------------------|-------------------------------------------|
+| Nome                  | MinneApple                                |
+| Fonte                 | Universidade de Minnesota (UMN DRUM)      |
+| Total de imagens      | 15.388                                    |
+| Total de anotações    | 41.000+ instâncias de maçãs               |
+| Maçãs por imagem      | 1 a 120                                   |
+| Tamanho               | 2,68 GB                                   |
+| Licença               | CC BY (uso livre)                         |
+| Origem                | Häni, Roy & Isler — IEEE RA-L, 2020       |
 
 🔗 Download: https://datasetninja.com/minne-apple  
 🔗 Repositório oficial: https://github.com/nicolaihaeni/MinneApple
 
 ### Pastas utilizadas
 
-| Pasta                          | Imagens | Descrição                          |
-|--------------------------------|---------|------------------------------------|
-| `detection/train/images/`      | 670     | Fotos completas de pomar           |
-| `detection/test/images/`       | 331     | Fotos completas de pomar           |
-| `counting/test/images/`        | 991     | Recortes de partes das árvores     |
-| `counting/val/images/`         | 3.395   | Recortes de partes das árvores     |
-| `counting/train/images/`       | 7.000   | Recortes de partes das árvores     |
-| **Total**                      | **15.388** | —                               |
+| Pasta                       | Imagens  | Descrição                      |
+|-----------------------------|----------|--------------------------------|
+| `detection/train/images/`   | 670      | Fotos completas de pomar       |
+| `detection/test/images/`    | 331      | Fotos completas de pomar       |
+| `counting/test/images/`     | 991      | Recortes de partes das árvores |
+| `counting/val/images/`      | 3.395    | Recortes de partes das árvores |
+| `counting/train/images/`    | 7.000    | Recortes de partes das árvores |
+| **Total**                   | **15.388** | —                            |
 
 ---
 
@@ -60,11 +61,11 @@ O processamento segue os seguintes passos:
 6. Detectar contornos externos dos objetos
 7. Filtrar contornos por área e circularidade
 8. Contar e anotar as maçãs detectadas em cada imagem
-9. Gerar relatório CSV e gráfico de distribuição
+9. Gerar relatório CSV e gráficos de desempenho
 
 ### Serial
 
-As 15.388 imagens são processadas **uma de cada vez**, de forma sequencial. Cada imagem passa pelo pipeline completo antes de iniciar a próxima.
+As 15.388 imagens são processadas **uma de cada vez**, de forma sequencial.
 
 ```
 Imagem 1     → pipeline → resultado 1
@@ -72,6 +73,17 @@ Imagem 2     → pipeline → resultado 2
 Imagem 3     → pipeline → resultado 3
 ...
 Imagem 15388 → pipeline → resultado 15388
+```
+
+### Paralela
+
+A solução paralela usa `multiprocessing.Pool` com `imap_unordered`:
+
+```
+                   ┌─── Worker 1  → detect(img_1, img_5, ...)
+Pool.imap_unordered┼─── Worker 2  → detect(img_2, img_6, ...)  → resultados
+                   ├─── Worker N  → detect(img_3, img_7, ...)
+                   └─── Worker N  → detect(img_4, img_8, ...)
 ```
 
 ---
@@ -96,7 +108,7 @@ Imagem 15388 → pipeline → resultado 15388
 
 ## 📊 Resultados
 
-### Execução com 15.388 imagens (dataset completo)
+### Execução Serial — 15.388 imagens
 
 | Métrica             | Valor        |
 |---------------------|--------------|
@@ -105,49 +117,58 @@ Imagem 15388 → pipeline → resultado 15388
 | Média por imagem    | 0.2          |
 | Tempo total         | 150.823s     |
 | Velocidade          | 102.0 imgs/s |
-| Erros               | 0            |
 | Taxa de sucesso     | 100%         |
 
-### Distribuição de maçãs por imagem
+### Benchmark Paralelo — Serial vs 2, 4, 6, 8 e 12 Workers
 
-| Maçãs por imagem | Qtd. de imagens | % do total |
-|------------------|-----------------|------------|
-| 0 maçãs          | ~12.460         | ~81%       |
-| 1 maçã           | ~2.000          | ~13%       |
-| 2 maçãs          | ~600            | ~4%        |
-| 3+ maçãs         | ~328            | ~2%        |
+| Modo         | Workers | Tempo (s) | Speedup | Eficiência |
+|--------------|---------|-----------|---------|------------|
+| Serial       | 1       | 150.823s  | 1.00x   | —          |
+| Paralelo     | 2       | 34.921s   | 4.32x   | 216.0%     |
+| Paralelo     | 4       | 21.727s   | 6.94x   | 173.5%     |
+| Paralelo     | 6       | 18.547s   | 8.13x   | 135.5%     |
+| Paralelo     | 8       | 17.238s   | **8.75x**   | 109.4%     |
+| Paralelo     | 12      | 17.577s   | 8.58x   | 71.5%      |
+
+> 🏆 **Melhor resultado:** 8 workers com speedup de **8.75x**, reduzindo o tempo de 150s para 17s.
+
+### Observações
+
+- O speedup cresce de forma expressiva de 2 até 8 workers
+- Com 12 workers o speedup cai levemente (8.58x vs 8.75x com 8), indicando que o overhead de gerenciamento supera o ganho de paralelismo
+- A eficiência acima de 100% em 2 e 4 workers indica ganho de cache e localidade de dados
 
 ### Arquivos gerados
 
-| Arquivo               | Conteúdo                                                    |
-|-----------------------|-------------------------------------------------------------|
-| `output/results.csv`  | Nome do arquivo e quantidade de maçãs detectadas por imagem |
-| `output/summary.png`  | Histograma de distribuição + tabela de estatísticas         |
-| `output/grafico_serial.png` | Gráfico de evolução da detecção por imagem            |
+| Arquivo                    | Conteúdo                                              |
+|----------------------------|-------------------------------------------------------|
+| `output/results.csv`       | Contagem de maçãs por imagem                          |
+| `output/summary.png`       | Histograma de distribuição + estatísticas             |
+| `output/grafico_serial.png`| Evolução da detecção por imagem                       |
+| `output/benchmark.png`     | Gráfico de speedup, eficiência e Lei de Amdahl        |
+| `output/benchmark.csv`     | Métricas numéricas do benchmark                       |
 
 ---
 
-## 📐 Próxima Etapa — Versão Paralela
+## 📐 Métricas Avaliadas
 
-A próxima etapa do projeto é implementar a versão **paralela** com `multiprocessing`, onde várias imagens são processadas simultaneamente para reduzir o tempo total.
-
-| Métrica         | Descrição                                                    |
-|-----------------|--------------------------------------------------------------|
-| Speedup         | Tempo serial ÷ Tempo paralelo                                |
-| Eficiência      | Speedup ÷ Número de workers                                  |
-| Lei de Amdahl   | Limite teórico do ganho com base na fração paralelizável     |
+| Métrica       | Fórmula                          | Descrição                                        |
+|---------------|----------------------------------|--------------------------------------------------|
+| Speedup       | Tempo serial ÷ Tempo paralelo    | Fator de aceleração obtido                       |
+| Eficiência    | Speedup ÷ Nº de workers          | Aproveitamento de cada worker                    |
+| Lei de Amdahl | 1 / ((1-p) + p/N)                | Limite teórico de speedup com fração p paralela  |
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
-| Tecnologia       | Versão mínima | Uso                          |
-|------------------|---------------|------------------------------|
-| Python           | 3.10          | Linguagem principal          |
-| opencv-python    | 4.8.0         | Processamento de imagem      |
-| numpy            | 1.24.0        | Operações matriciais         |
-| matplotlib       | 3.7.0         | Geração de gráficos          |
-| multiprocessing  | stdlib        | Paralelismo (próxima etapa)  |
+| Tecnologia       | Versão mínima | Uso                               |
+|------------------|---------------|-----------------------------------|
+| Python           | 3.10          | Linguagem principal               |
+| opencv-python    | 4.8.0         | Processamento de imagem           |
+| numpy            | 1.24.0        | Operações matriciais              |
+| matplotlib       | 3.7.0         | Geração de gráficos               |
+| multiprocessing  | stdlib        | Paralelismo com Pool de processos |
 
 ---
 
@@ -157,20 +178,23 @@ A próxima etapa do projeto é implementar a versão **paralela** com `multiproc
 contagem-macas-opencv/
 │
 ├── data/
-│   └── apples/                   # Imagens do MinneApple (baixar separadamente)
+│   └── apples/                      # Imagens do MinneApple (baixar separadamente)
 │
 ├── output/
-│   ├── results.csv               # Contagem por imagem
-│   ├── summary.png               # Gráfico de distribuição
-│   ├── grafico_serial.png        # Gráfico de evolução serial
-│   └── annotated/                # Imagens anotadas (--save-images)
+│   ├── results.csv                  # Contagem por imagem
+│   ├── summary.png                  # Gráfico de distribuição
+│   ├── grafico_serial.png           # Evolução serial por imagem
+│   ├── benchmark.png                # Gráfico de benchmark
+│   └── benchmark.csv               # Métricas do benchmark
 │
-├── detector.py                   # Algoritmo de detecção com OpenCV
-├── processor.py                  # Processamento serial
-├── utils.py                      # Dataset, relatórios e gráficos
-├── grafico_serial.py             # Gerador do gráfico serial
-├── main.py                       # Ponto de entrada (CLI)
-├── requirements.txt              # Dependências Python
+├── detector.py                      # Algoritmo de detecção com OpenCV
+├── processor.py                     # Processamento serial
+├── paralelo.py                      # Processamento paralelo com multiprocessing
+├── gerar_grafico_benchmark.py       # Benchmark serial vs paralelo
+├── grafico_serial.py                # Gráfico da execução serial
+├── utils.py                         # Dataset, relatórios e gráficos
+├── main.py                          # Ponto de entrada (CLI)
+├── requirements.txt                 # Dependências Python
 └── README.md
 ```
 
@@ -204,17 +228,17 @@ Copie as imagens das pastas abaixo para `data/apples/`:
 ### 4. Executar
 
 ```bash
-# Processamento completo
+# Processamento serial completo
 python main.py --dataset data/apples
+
+# Benchmark serial vs paralelo (2, 4, 6, 8 e 12 workers)
+python gerar_grafico_benchmark.py --dataset data/apples
+
+# Gráfico da execução serial
+python grafico_serial.py
 
 # Testar com poucas imagens
 python main.py --dataset data/apples --limit 10
-
-# Salvar imagens anotadas
-python main.py --dataset data/apples --save-images
-
-# Gerar gráfico serial
-python grafico_serial.py
 ```
 
 ---
