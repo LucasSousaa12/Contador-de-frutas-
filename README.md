@@ -38,14 +38,14 @@ Este trabalho foi desenvolvido como projeto prático da disciplina de **Programa
 
 ### Pastas utilizadas
 
-| Pasta                       | Imagens  | Descrição                      |
-|-----------------------------|----------|--------------------------------|
-| `detection/train/images/`   | 670      | Fotos completas de pomar       |
-| `detection/test/images/`    | 331      | Fotos completas de pomar       |
-| `counting/test/images/`     | 991      | Recortes de partes das árvores |
-| `counting/val/images/`      | 3.395    | Recortes de partes das árvores |
-| `counting/train/images/`    | 7.000    | Recortes de partes das árvores |
-| **Total**                   | **15.388** | —                            |
+| Pasta                       | Imagens    | Descrição                      |
+|-----------------------------|------------|--------------------------------|
+| `detection/train/images/`   | 670        | Fotos completas de pomar       |
+| `detection/test/images/`    | 331        | Fotos completas de pomar       |
+| `counting/test/images/`     | 991        | Recortes de partes das árvores |
+| `counting/val/images/`      | 3.395      | Recortes de partes das árvores |
+| `counting/train/images/`    | 7.000      | Recortes de partes das árvores |
+| **Total**                   | **15.388** | —                              |
 
 ---
 
@@ -119,44 +119,48 @@ Pool.imap_unordered┼─── Worker 2  → detect(img_2, img_6, ...)  → res
 | Velocidade          | 102.0 imgs/s |
 | Taxa de sucesso     | 100%         |
 
+---
+
 ### Benchmark Paralelo — Serial vs 2, 4, 6, 8 e 12 Workers
 
-| Modo         | Workers | Tempo (s) | Speedup | Eficiência |
-|--------------|---------|-----------|---------|------------|
-| Serial       | 1       | 150.823s  | 1.00x   | —          |
-| Paralelo     | 2       | 34.921s   | 4.32x   | 216.0%     |
-| Paralelo     | 4       | 21.727s   | 6.94x   | 173.5%     |
-| Paralelo     | 6       | 18.547s   | 8.13x   | 135.5%     |
-| Paralelo     | 8       | 17.238s   | **8.75x**   | 109.4%     |
-| Paralelo     | 12      | 17.577s   | 8.58x   | 71.5%      |
+Fórmulas utilizadas:
 
-> 🏆 **Melhor resultado:** 8 workers com speedup de **8.75x**, reduzindo o tempo de 150s para 17s.
+| Métrica        | Fórmula                                   |
+|----------------|-------------------------------------------|
+| Speedup        | S = T_serial / T_paralelo                 |
+| Eficiência     | E = S / N_workers                         |
+| Redução de tempo | R = (1 - T_paralelo / T_serial) × 100  |
+| Lei de Amdahl  | S_max = 1 / ((1 - p) + p / N)            |
+
+> Fração paralelizável estimada: **p ≈ 1.00** (tarefa quase 100% paralelizável — cada imagem é processada de forma completamente independente)
+
+| Modo     | Workers | Tempo (s) | Speedup   | Eficiência | Redução de Tempo | Limite Amdahl |
+|----------|---------|-----------|-----------|------------|------------------|---------------|
+| Serial   | 1       | 150.823s  | 1.00x     | 100.0%     | —                | —             |
+| Paralelo | 2       | 34.921s   | 4.32x     | 216.0%     | 76.8%            | 2.02x         |
+| Paralelo | 4       | 21.727s   | 6.94x     | 173.5%     | 85.6%            | 4.15x         |
+| Paralelo | 6       | 18.547s   | 8.13x     | 135.5%     | 87.7%            | 6.39x         |
+| Paralelo | 8       | 17.238s   | **8.75x** | 109.4%     | **88.6%**        | 8.75x         |
+| Paralelo | 12      | 17.577s   | 8.58x     | 71.5%      | 88.3%            | 13.87x        |
+
+> 🏆 **Melhor resultado:** 8 workers com speedup de **8.75x**, reduzindo o tempo de 150.8s para 17.2s — uma redução de **88.6%** no tempo de execução.
 
 ### Observações
 
-- O speedup cresce de forma expressiva de 2 até 8 workers
-- Com 12 workers o speedup cai levemente (8.58x vs 8.75x com 8), indicando que o overhead de gerenciamento supera o ganho de paralelismo
-- A eficiência acima de 100% em 2 e 4 workers indica ganho de cache e localidade de dados
+- O speedup cresce expressivamente de 2 até 8 workers, acompanhando de perto o limite teórico de Amdahl
+- Com 12 workers o speedup cai levemente (8.58x vs 8.75x com 8 workers), indicando que o **overhead de criação e gerenciamento de processos** começa a superar o ganho de paralelismo
+- A eficiência acima de 100% em 2 e 4 workers indica **speedup superlinear** — ocorre por ganhos de cache: cada worker acessa um subconjunto menor de imagens, que cabe melhor na memória cache do processador
+- A tarefa de detecção de maçãs é **altamente paralelizável** pois cada imagem é processada de forma completamente independente, sem estado compartilhado entre workers
 
 ### Arquivos gerados
 
-| Arquivo                    | Conteúdo                                              |
-|----------------------------|-------------------------------------------------------|
-| `output/results.csv`       | Contagem de maçãs por imagem                          |
-| `output/summary.png`       | Histograma de distribuição + estatísticas             |
-| `output/grafico_serial.png`| Evolução da detecção por imagem                       |
-| `output/benchmark.png`     | Gráfico de speedup, eficiência e Lei de Amdahl        |
-| `output/benchmark.csv`     | Métricas numéricas do benchmark                       |
-
----
-
-## 📐 Métricas Avaliadas
-
-| Métrica       | Fórmula                          | Descrição                                        |
-|---------------|----------------------------------|--------------------------------------------------|
-| Speedup       | Tempo serial ÷ Tempo paralelo    | Fator de aceleração obtido                       |
-| Eficiência    | Speedup ÷ Nº de workers          | Aproveitamento de cada worker                    |
-| Lei de Amdahl | 1 / ((1-p) + p/N)                | Limite teórico de speedup com fração p paralela  |
+| Arquivo                     | Conteúdo                                       |
+|-----------------------------|------------------------------------------------|
+| `output/results.csv`        | Contagem de maçãs por imagem                   |
+| `output/summary.png`        | Histograma de distribuição + estatísticas      |
+| `output/grafico_serial.png` | Evolução da detecção por imagem                |
+| `output/benchmark.png`      | Gráfico de speedup, eficiência e Lei de Amdahl |
+| `output/benchmark.csv`      | Métricas numéricas do benchmark                |
 
 ---
 
@@ -185,7 +189,7 @@ contagem-macas-opencv/
 │   ├── summary.png                  # Gráfico de distribuição
 │   ├── grafico_serial.png           # Evolução serial por imagem
 │   ├── benchmark.png                # Gráfico de benchmark
-│   └── benchmark.csv               # Métricas do benchmark
+│   └── benchmark.csv                # Métricas do benchmark
 │
 ├── detector.py                      # Algoritmo de detecção com OpenCV
 ├── processor.py                     # Processamento serial
@@ -242,6 +246,12 @@ python main.py --dataset data/apples --limit 10
 ```
 
 ---
+
+## 📖 Referência do Dataset
+
+> Häni, N., Roy, P., & Isler, V. (2020). **MinneApple: A Benchmark Dataset for Apple Detection and Segmentation**.  
+> *IEEE Robotics and Automation Letters*, 5(2), 852–858.  
+> https://doi.org/10.1109/LRA.2020.2965061
 
 ## 📖 Referência do Dataset
 
