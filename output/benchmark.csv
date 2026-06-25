@@ -1,0 +1,7 @@
+modo,workers,tempo_s,speedup,eficiencia
+serial,1,150.823,1.00,100.00%
+paralelo,2,34.921,4.32,216.0%
+paralelo,4,21.727,6.94,173.5%
+paralelo,6,18.547,8.13,135.5%
+paralelo,8,17.238,8.75,109.4%
+paralelo,12,17.577,8.58,71.5%
