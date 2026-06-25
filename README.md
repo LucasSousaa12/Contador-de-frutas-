@@ -252,9 +252,3 @@ python main.py --dataset data/apples --limit 10
 > Häni, N., Roy, P., & Isler, V. (2020). **MinneApple: A Benchmark Dataset for Apple Detection and Segmentation**.  
 > *IEEE Robotics and Automation Letters*, 5(2), 852–858.  
 > https://doi.org/10.1109/LRA.2020.2965061
-
-## 📖 Referência do Dataset
-
-> Häni, N., Roy, P., & Isler, V. (2020). **MinneApple: A Benchmark Dataset for Apple Detection and Segmentation**.  
-> *IEEE Robotics and Automation Letters*, 5(2), 852–858.  
-> https://doi.org/10.1109/LRA.2020.2965061
