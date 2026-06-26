@@ -121,7 +121,7 @@ Pool.imap_unordered┼─── Worker 2  → detect(img_2, img_6, ...)  → res
 
 ---
 
-### Benchmark Paralelo — Serial vs 2, 4, 6, 8 e 12 Workers
+### Benchmark Paralelo — Serial vs 2, 4, 8 e 12 Workers
 
 Fórmulas utilizadas:
 
@@ -139,7 +139,6 @@ Fórmulas utilizadas:
 | Serial   | 1       | 150.823s  | 1.00x     | 100.0%     | —                | —             |
 | Paralelo | 2       | 34.921s   | 4.32x     | 216.0%     | 76.8%            | 2.02x         |
 | Paralelo | 4       | 21.727s   | 6.94x     | 173.5%     | 85.6%            | 4.15x         |
-| Paralelo | 6       | 18.547s   | 8.13x     | 135.5%     | 87.7%            | 6.39x         |
 | Paralelo | 8       | 17.238s   | **8.75x** | 109.4%     | **88.6%**        | 8.75x         |
 | Paralelo | 12      | 17.577s   | 8.58x     | 71.5%      | 88.3%            | 13.87x        |
 
@@ -235,7 +234,7 @@ Copie as imagens das pastas abaixo para `data/apples/`:
 # Processamento serial completo
 python main.py --dataset data/apples
 
-# Benchmark serial vs paralelo (2, 4, 6, 8 e 12 workers)
+# Benchmark serial vs paralelo (2, 4, 8 e 12 workers)
 python gerar_grafico_benchmark.py --dataset data/apples
 
 # Gráfico da execução serial
