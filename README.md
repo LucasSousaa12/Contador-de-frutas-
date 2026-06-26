@@ -151,6 +151,10 @@ Fórmulas utilizadas:
 - A eficiência acima de 100% em 2 e 4 workers indica **speedup superlinear** — ocorre por ganhos de cache: cada worker acessa um subconjunto menor de imagens, que cabe melhor na memória cache do processador
 - A tarefa de detecção de maçãs é **altamente paralelizável** pois cada imagem é processada de forma completamente independente, sem estado compartilhado entre workers
 
+<img width="2084" height="1475" alt="benchmark" src="https://github.com/user-attachments/assets/8d3c59ba-bbb8-44d0-b13b-6833c33c0dad" />
+O benchmark foi conduzido sobre 15.388 imagens de maçãs utilizando OpenCV para detecção e multiprocessing para paralelização. A versão serial levou 150,8 segundos para processar todo o dataset. Com a paralelização, esse tempo caiu drasticamente — chegando a 15,7 segundos com 8 workers, um speedup de 9,63× em relação ao modo serial.
+O ganho de desempenho cresce de forma consistente até 8 workers, ponto onde a eficiência ainda se mantém acima de 100% (efeito superlinear, possivelmente por melhor aproveitamento de cache). A partir daí, adicionar mais workers traz retorno decrescente: com 12 workers o tempo praticamente não melhora (15,8s) e a eficiência cai para 79,4%, indicando saturação por overhead de gerenciamento de processos. A análise pela Lei de Amdahl, com p = 0,99, confirma que o gargalo não está no código, mas nos limites práticos do hardware — tornando 8 workers a configuração ideal para esse workload.
+
 ### Arquivos gerados
 
 | Arquivo                     | Conteúdo                                       |
@@ -200,7 +204,6 @@ contagem-macas-opencv/
 ├── requirements.txt                 # Dependências Python
 └── README.md
 ```
-
 ---
 
 ## 🚀 Como Executar
