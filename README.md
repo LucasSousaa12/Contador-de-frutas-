@@ -121,39 +121,40 @@ Pool.imap_unordered┼─── Worker 2  → detect(img_2, img_6, ...)  → res
 
 ---
 
-### Benchmark Paralelo — Serial vs 2, 4, 8 e 12 Workers
+### Benchmark Paralelo — Serial vs 2, 4, 6, 8 e 12 Workers
+
+Os valores abaixo correspondem ao registro armazenado em `output/benchmark.csv`.
 
 Fórmulas utilizadas:
 
-| Métrica        | Fórmula                                   |
-|----------------|-------------------------------------------|
-| Speedup        | S = T_serial / T_paralelo                 |
-| Eficiência     | E = S / N_workers                         |
-| Redução de tempo | R = (1 - T_paralelo / T_serial) × 100  |
-| Lei de Amdahl  | S_max = 1 / ((1 - p) + p / N)            |
+| Métrica          | Fórmula                               |
+| ---------------- | ------------------------------------- |
+| Speedup          | S = T_serial / T_paralelo             |
+| Eficiência       | E = S / N_workers                     |
+| Redução de tempo | R = (1 - T_paralelo / T_serial) × 100 |
 
-> Fração paralelizável estimada: **p ≈ 1.00** (tarefa quase 100% paralelizável — cada imagem é processada de forma completamente independente)
+| Modo     | Workers | Tempo (s) |   Speedup | Eficiência | Redução de tempo |
+| -------- | ------: | --------: | --------: | ---------: | ---------------: |
+| Serial   |       1 |  150.823s |     1.00x |     100.0% |                — |
+| Paralelo |       2 |   34.921s |     4.32x |     216.0% |            76.8% |
+| Paralelo |       4 |   21.727s |     6.94x |     173.5% |            85.6% |
+| Paralelo |       6 |   18.547s |     8.13x |     135.5% |            87.7% |
+| Paralelo |       8 |   17.238s | **8.75x** |     109.4% |        **88.6%** |
+| Paralelo |      12 |   17.577s |     8.58x |      71.5% |            88.3% |
 
-| Modo     | Workers | Tempo (s) | Speedup   | Eficiência | Redução de Tempo | Limite Amdahl |
-|----------|---------|-----------|-----------|------------|------------------|---------------|
-| Serial   | 1       | 150.823s  | 1.00x     | 100.0%     | —                | —             |
-| Paralelo | 2       | 34.921s   | 4.32x     | 216.0%     | 76.8%            | 2.02x         |
-| Paralelo | 4       | 21.727s   | 6.94x     | 173.5%     | 85.6%            | 4.15x         |
-| Paralelo | 8       | 17.238s   | **8.75x** | 109.4%     | **88.6%**        | 8.75x         |
-| Paralelo | 12      | 17.577s   | 8.58x     | 71.5%      | 88.3%            | 13.87x        |
+> 🏆 **Melhor tempo registrado:** 8 workers, com 17.238s, speedup aparente de 8.75x e redução de 88.6% em relação ao tempo serial de referência.
 
-> 🏆 **Melhor resultado:** 8 workers com speedup de **8.75x**, reduzindo o tempo de 150.8s para 17.2s — uma redução de **88.6%** no tempo de execução.
+### Interpretação e limitações do benchmark
 
-### Observações
+* O tempo diminuiu até 8 workers; com 12 workers houve uma pequena regressão, compatível com o overhead de criação, comunicação e gerenciamento de processos.
+* Cada imagem é processada independentemente, tornando o problema naturalmente adequado ao paralelismo.
+* Os valores registram uma execução real, mas o tempo serial de 150.823s foi medido separadamente e inserido como constante no script de benchmark.
+* A execução serial original exibia o progresso de cada imagem no terminal, enquanto as execuções paralelas foram medidas sem esse callback. Essa diferença pode influenciar a comparação.
+* Por isso, eficiências acima de 100% devem ser tratadas como **speedup aparente**, e não como comprovação isolada de ganhos de cache ou speedup superlinear.
+* Para um benchmark mais rigoroso, recomenda-se medir serial e paralelo na mesma execução, sem saída de progresso, repetir cada configuração e apresentar média e desvio padrão.
 
-- O speedup cresce expressivamente de 2 até 8 workers, acompanhando de perto o limite teórico de Amdahl
-- Com 12 workers o speedup cai levemente (8.58x vs 8.75x com 8 workers), indicando que o **overhead de criação e gerenciamento de processos** começa a superar o ganho de paralelismo
-- A eficiência acima de 100% em 2 e 4 workers indica **speedup superlinear** — ocorre por ganhos de cache: cada worker acessa um subconjunto menor de imagens, que cabe melhor na memória cache do processador
-- A tarefa de detecção de maçãs é **altamente paralelizável** pois cada imagem é processada de forma completamente independente, sem estado compartilhado entre workers
+<img width="2084" height="1475" alt="Gráfico do benchmark serial e paralelo" src="https://github.com/user-attachments/assets/8d3c59ba-bbb8-44d0-b13b-6833c33c0dad" />
 
-<img width="2084" height="1475" alt="benchmark" src="https://github.com/user-attachments/assets/8d3c59ba-bbb8-44d0-b13b-6833c33c0dad" />
-O benchmark foi conduzido sobre 15.388 imagens de maçãs utilizando OpenCV para detecção e multiprocessing para paralelização. A versão serial levou 150,8 segundos para processar todo o dataset. Com a paralelização, esse tempo caiu drasticamente — chegando a 15,7 segundos com 8 workers, um speedup de 9,63× em relação ao modo serial.
-O ganho de desempenho cresce de forma consistente até 8 workers, ponto onde a eficiência ainda se mantém acima de 100% (efeito superlinear, possivelmente por melhor aproveitamento de cache). A partir daí, adicionar mais workers traz retorno decrescente: com 12 workers o tempo praticamente não melhora (15,8s) e a eficiência cai para 79,4%, indicando saturação por overhead de gerenciamento de processos. A análise pela Lei de Amdahl, com p = 0,99, confirma que o gargalo não está no código, mas nos limites práticos do hardware — tornando 8 workers a configuração ideal para esse workload.
 
 ### Arquivos gerados
 
@@ -237,7 +238,7 @@ Copie as imagens das pastas abaixo para `data/apples/`:
 # Processamento serial completo
 python main.py --dataset data/apples
 
-# Benchmark serial vs paralelo (2, 4, 8 e 12 workers)
+# Benchmark serial vs paralelo (2, 4, 6, 8 e 12 workers)
 python gerar_grafico_benchmark.py --dataset data/apples
 
 # Gráfico da execução serial
